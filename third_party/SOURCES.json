@@ -1,0 +1,45 @@
+{
+  "sources": [
+    {
+      "file": "licenses/Apache-2.0.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358,
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+    },
+    {
+      "file": "licenses/MPL-2.0.txt",
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "bytes": 16726,
+      "url": "https://www.mozilla.org/media/MPL/2.0/index.815ca599c9df.txt"
+    },
+    {
+      "file": "licenses/BSL-1.0.txt",
+      "sha256": "8d8291caf1cee26d23acf3eb67c9f9a2d58f1c681b16a4fbe8cbfb9e3c0b5a9b",
+      "bytes": 1337,
+      "url": "https://raw.githubusercontent.com/JetBrains/kotlin/v1.9.10/license/third_party/boost_LICENSE.txt"
+    },
+    {
+      "file": "notices/kotlinx-coroutines-NOTICE.txt",
+      "sha256": "e2d729c0548af3d0de8deddde6a525d10d2026961727b23795346484ef46a137",
+      "bytes": 473,
+      "url": "https://raw.githubusercontent.com/Kotlin/kotlinx.coroutines/1.7.3/license/NOTICE.txt"
+    },
+    {
+      "file": "notices/kotlin-COPYRIGHT.txt",
+      "sha256": "74ac3f60f19f7a88510f72d59f70b03b6a91c025364aa921e1b0df2058bd0017",
+      "bytes": 647,
+      "url": "https://raw.githubusercontent.com/JetBrains/kotlin/v1.9.10/license/COPYRIGHT.txt"
+    },
+    {
+      "file": "sources/public_suffix_list.dat",
+      "sha256": "e8b273972eb5a70e888bd3e7d7c5b9b04e600a59d69def9136a74d70ae6fcdd3",
+      "bytes": 246016,
+      "url": "https://raw.githubusercontent.com/square/okhttp/parent-4.12.0/okhttp/src/test/resources/okhttp3/internal/publicsuffix/public_suffix_list.dat"
+    },
+    {
+      "file": "notices/okhttp-publicsuffix-NOTICE.txt",
+      "sha256": "8a9c58fbded5ea3474315e4a9824ca8b1486098a1a03e897e0b19419d5e1876a",
+      "source": "okhttp3/internal/publicsuffix/NOTICE from distributed APK"
+    }
+  ]
+}

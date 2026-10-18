@@ -7,3 +7,21 @@ local.properties
 *.apk
 *.aab
 *.hprof
+
+# Signing material and local secrets must remain outside the repository.
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.key
+*.pem
+storepass.txt
+keypass.txt
+.env
+.env.*
+keystore.properties
+signing.properties
+
+# Historical local-only work notes; not part of public source.
+LOCAL_ANDROID.md
+LOCAL_IMPLEMENTATION_PLAN.md

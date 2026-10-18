@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <provider android:name="com.cfst.app.P01FixtureProvider" android:authorities="com.cfst.app.local.test.p01.fixture" android:exported="true" android:grantUriPermissions="true" />
+    </application>
+</manifest>

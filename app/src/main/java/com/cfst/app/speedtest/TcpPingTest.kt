@@ -21,10 +21,13 @@ class TcpPingTest {
         val packetLoss: Double,  // 丢包率 (0.00 - 100.00)
         val avgLatency: Double,  // 平均延迟 (ms)
         val minLatency: Double,  // 最小延迟 (ms)
-        val maxLatency: Double   // 最大延迟 (ms)
+        val maxLatency: Double,   // 最大延迟 (ms)
+        val cancelledAttempts: Int = 0,
+        val cancelled: Boolean = false
     )
     
     companion object {
+        @Volatile var connectionObserver:((Socket)->Unit)?=null
         private const val DEFAULT_PORT = 443
         private const val DEFAULT_TIMEOUT_MS = 1000
         
@@ -40,20 +43,29 @@ class TcpPingTest {
             ip: String,
             port: Int = DEFAULT_PORT,
             count: Int = 4,
-            timeoutMs: Int = DEFAULT_TIMEOUT_MS
+            timeoutMs: Int = DEFAULT_TIMEOUT_MS,
+            cancellation: RunCancellation = RunCancellation()
         ): PingResult = withContext(Dispatchers.IO) {
             val latencies = mutableListOf<Double>()
+            var attempted = 0
+            var cancelledAttempts = 0
             
             repeat(count) {
-                val latency = singleTcpPing(ip, port, timeoutMs)
+                if (cancellation.cancelled) return@repeat
+                val remaining=cancellation.remainingMillis(timeoutMs.toLong()).toInt()
+                if(remaining<=0) return@repeat
+                attempted++
+                val latency = singleTcpPing(ip, port, remaining, cancellation)
+                if (cancellation.cancelled && latency == null) { cancelledAttempts++; return@repeat }
                 if (latency != null) {
                     latencies.add(latency)
                 }
             }
             
             val received = latencies.size
-            val packetLoss = if (count > 0) {
-                round(((count - received).toDouble() / count) * 10000) / 100
+            val completed = attempted - cancelledAttempts
+            val packetLoss = if (completed > 0) {
+                round(((completed - received).toDouble() / completed) * 10000) / 100
             } else {
                 0.0
             }
@@ -77,12 +89,14 @@ class TcpPingTest {
             }
             
             PingResult(
-                sent = count,
+                sent = attempted,
                 received = received,
                 packetLoss = packetLoss,
                 avgLatency = avgLatency,
                 minLatency = minLatency,
-                maxLatency = maxLatency
+                maxLatency = maxLatency,
+                cancelledAttempts = cancelledAttempts,
+                cancelled = cancelledAttempts>0 || (cancellation.cancelled && attempted<count)
             )
         }
         
@@ -90,23 +104,26 @@ class TcpPingTest {
          * 执行单次 TCP Ping
          * @return 延迟 (ms)，如果失败返回 null
          */
-        private fun singleTcpPing(ip: String, port: Int, timeoutMs: Int): Double? {
+        private fun singleTcpPing(ip: String, port: Int, timeoutMs: Int, cancellation: RunCancellation): Double? {
             return try {
                 val socket = Socket()
+                val unregister = cancellation.register { socket.close() }
                 val startTime = System.nanoTime()
                 
                 try {
                     socket.connect(
-                        InetSocketAddress(ip, port),
+                        InetSocketAddress(com.cfst.app.utils.IpRangeParser.literalAddress(ip), port),
                         timeoutMs
                     )
                     val endTime = System.nanoTime()
                     val latencyMs = (endTime - startTime) / 1_000_000.0
+                    connectionObserver?.invoke(socket)
                     
                     // 限制最大延迟显示
                     val roundedLatency = round(latencyMs * 100) / 100
                     if (roundedLatency > 9999) null else roundedLatency
                 } finally {
+                    unregister()
                     try {
                         socket.close()
                     } catch (e: Exception) {
