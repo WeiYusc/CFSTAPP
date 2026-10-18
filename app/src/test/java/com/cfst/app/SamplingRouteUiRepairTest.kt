@@ -9,15 +9,15 @@ class SamplingRouteUiRepairTest {
     private fun source(path:String)=File("src/main/java/com/cfst/app/$path").readText()
     @Test fun advancedEditorBindsModeAndPersistentMigrationNotice() {
         val s=source("ui/settings/AdvancedSettingsScreen.kt")
-        assertTrue(s.contains("draft.randomizeSampleSeed"));assertTrue(s.contains("randomizeSampleSeed=it"))
-        assertTrue(s.contains("!running && !draft.randomizeSampleSeed"))
+        assertFalse(s.contains("draft.randomizeSampleSeed"));assertFalse(s.contains("sample-seed-input"))
+        assertTrue(s.contains("每轮自动采样"))
         assertTrue(s.contains("samplingMigrationNoticePending.collectAsState()"));assertTrue(s.contains("acknowledgeSamplingMigration"))
     }
     @Test fun testAndRetestShowEffectiveVersusFutureSeedWithoutConsumingSource() {
         val s=source("ui/test/TestScreen.kt");val cards=source("ui/components/RunCards.kt")
-        assertTrue(s.contains("randomizeSampleSeed.collectAsState()"));assertTrue(s.contains("samplingMigrationNoticePending.collectAsState()"))
-        assertTrue(s.contains("acknowledgeSamplingMigration"));assertTrue(s.contains("resultConfig?.sampleSeed"))
-        assertTrue(cards.contains("探索seed启动时生成"));assertTrue(cards.contains("randomizeSeed"))
+        assertFalse(s.contains("randomizeSampleSeed"));assertTrue(s.contains("samplingMigrationNoticePending.collectAsState()"))
+        assertTrue(s.contains("acknowledgeSamplingMigration"));assertFalse(s.contains("sampleSeed"))
+        assertFalse(cards.contains("seed",ignoreCase=true));assertTrue(cards.contains("仅复测已确认的单个 IP"))
     }
     @Test fun allRoutesWarnWithoutClaimingProxyBypass() {
         val s=source("ui/test/TestScreen.kt");val cards=source("ui/components/RunCards.kt")

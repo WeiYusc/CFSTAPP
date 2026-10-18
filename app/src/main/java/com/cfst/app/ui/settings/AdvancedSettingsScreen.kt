@@ -30,7 +30,7 @@ import com.cfst.app.settings.SettingsDraft
             Text(if(pending) "配置草稿 · 尚未保存" else "查看已保存配置 · 未修改不阻断测速",style=MaterialTheme.typography.titleMedium)
             Text(status.take(512),style=MaterialTheme.typography.bodySmall)
             if(migrationPending) Card { Column(Modifier.padding(16.dp)) {
-                Text("默认已改每轮探索；原固定seed保留，可切回固定复现。")
+                Text("每轮自动采样，无需配置内部参数；已有历史结果保留。")
                 TextButton(onClick={vm.acknowledgeSamplingMigration()}) { Text("知道了") }
             } }
             Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -48,9 +48,7 @@ import com.cfst.app.settings.SettingsDraft
                 Text("下载 ${if(draft.enableDownload) "开启" else "关闭"} · 预算 ${draft.budgetMb} MB")
                 if(expandedResource) {
                     DraftInput(draft.runTimeSeconds,{change(draft.copy(runTimeSeconds=it))},"标准run总秒数 30..600","run-deadline-input",integerError(draft.runTimeSeconds,30..600),enabled=!running)
-                    Row { Text("每轮探索（非密码学随机seed）",Modifier.weight(1f));Switch(draft.randomizeSampleSeed,{change(draft.copy(randomizeSampleSeed=it))},enabled=!running) }
-                    DraftInput(draft.sampleSeed,{change(draft.copy(sampleSeed=it))},"固定复现seed（64位整数）","sample-seed-input",if(draft.sampleSeed.toLongOrNull()==null) "须为64位整数" else null,enabled=!running && !draft.randomizeSampleSeed)
-                    Text("探索seed只在确认启动时生成；固定seed仅同算法版本复现。")
+
                     Text("IPv4 literal/小段优先、去重/24分层；IPv6仅实际literal或≤256成员段，巨大前缀不制造节点。",style=MaterialTheme.typography.bodySmall)
                     Text("下载始终串行",style=MaterialTheme.typography.bodySmall)
                     Row { Text("启用下载",Modifier.weight(1f)); Switch(draft.enableDownload,{change(draft.copy(enableDownload=it))},enabled=!running) }
@@ -78,7 +76,7 @@ import com.cfst.app.settings.SettingsDraft
                     Row { Text("使用列表镜像",Modifier.weight(1f)); Switch(draft.useMirror,{change(draft.copy(useMirror=it))},enabled=!running) }
                 }
             } }
-            Text("帮助 / 关于 · CFST Local 1.2.1",style=MaterialTheme.typography.titleMedium)
+            Text("帮助 / 关于 · CFST Local 1.2.2",style=MaterialTheme.typography.titleMedium)
             Text("literal DNS、实际Peer/Port核验、NO_PROXY、禁止重定向。吞吐含连接/TLS总耗时；不是峰值或运营商wire-byte账单。",style=MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(16.dp))
         }

@@ -1177,7 +1177,8 @@ class SpeedTestViewModel internal constructor(private val application: Applicati
         val config:SpeedTestEngine.TestConfig
         val reserved:com.cfst.app.speedtest.RunCancellation
         try {
-            config=if(_randomizeSampleSeed.value) savedConfig.copy(sampleSeed=seedSource()) else savedConfig
+            // Stored legacy mode/seed are compatibility data, never a new-run policy.
+            config=savedConfig.copy(sampleSeed=seedSource())
             reserved=engine.reserve(config,familyRanges,parentRunId,confirmedLiteral) ?: run { _statusMessage.value="运行尚未结束，请等待原运行收尾";return false }
         } catch(e:Exception) { _statusMessage.value="启动失败：${e.message}";return false }
         _resultDownloadEnabled.value=config.downloadTest

@@ -45,12 +45,13 @@ class SamplingModeRepairTest {
         assertTrue(vm.restoreAppState(vm.exportAppState()));assertEquals(records,vm.runRecords.value)
     }
     @Test fun blockedAndFixedRunsNeverConsumeExplorationSource() {
-        var calls=0;val vm=vmWithSeed { calls++;error("must not resolve") }
+        var calls=0;val vm=vmWithSeed { (++calls).toLong()*65536 }
         vm.updateDraft(vm.beginDraft().copy(candidates="2"));vm.startTest();assertEquals(0,calls);vm.cancelDraft()
         val tree=Gson().toJsonTree(vm.beginDraft()).asJsonObject;tree.addProperty("randomizeSampleSeed",false);tree.addProperty("sampleSeed",Long.MIN_VALUE.toString());tree.addProperty("enableDownload",false);tree.addProperty("port","1");tree.addProperty("repetitions","1")
         assertTrue(vm.saveDraft(Gson().fromJson(tree,SettingsDraft::class.java)));vm.loadIpRanges("127.0.0.1")
-        repeat(2) { vm.startTest();finish(vm);assertEquals(Long.MIN_VALUE,vm.runRecords.value.first().config!!.sampleSeed) }
-        assertEquals(0,calls)
+        // Legacy fixed fields remain compatible but no longer control new runs.
+        repeat(2) { index -> vm.startTest();finish(vm);assertEquals((index+1L)*65536,vm.runRecords.value.first().config!!.sampleSeed) }
+        assertEquals(2,calls)
     }
     @Test fun seedFailurePreservesPreviousResultsHistoryAndDoesNotReserve() {
         var fail=false;val vm=vmWithSeed { if(fail) error("fixture seed failure") else 17L }

@@ -52,13 +52,14 @@ class N3SettingsTest {
         assertEquals("45",Gson().toJsonTree(second.beginDraft()).asJsonObject["runTimeSeconds"].asString)
     }
     @Test fun actualVmReservesFrozenSavedDeadlineSeedAndNeverReadsDirtyDraft() {
-        val vm=SpeedTestViewModel(ApplicationProvider.getApplicationContext<Application>())
+        var calls=0
+        val vm=SpeedTestViewModel(ApplicationProvider.getApplicationContext<Application>()) { calls++;5678L }
         assertTrue(vm.saveDraft(vm.beginDraft().copy(runTimeSeconds="37",sampleSeed="1234",randomizeSampleSeed=false)))
         vm.loadIpRanges("127.0.0.1")
         vm.startTest()
         val engine=vm.javaClass.getDeclaredField("engine").apply { isAccessible=true }.get(vm) as SpeedTestEngine
         assertEquals(37,engine.runOwner!!.config!!.runTimeSeconds)
-        assertEquals(1234L,engine.runOwner!!.config!!.sampleSeed)
+        assertEquals(5678L,engine.runOwner!!.config!!.sampleSeed);assertEquals(1,calls)
         // Stop only after a raw result exists. Stop-before-entry may legitimately produce
         // no historical row; that separate cancellation path cannot prove saved seed replay.
         val resultDeadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(5)

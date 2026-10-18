@@ -28,7 +28,7 @@ class N3EngineTest {
         val test=root.resolve("ui/test/TestScreen.kt").readText()
         assertTrue("persistent sampler notice missing from UI",test.contains("vm.samplingNotice.collectAsState"))
         assertTrue("deadline config summary missing",test.contains("vm.runTimeSeconds.collectAsState"))
-        assertTrue("seed summary missing",test.contains("vm.sampleSeed.collectAsState"))
+        assertFalse("internal seed must not be a user configuration",test.contains("vm.sampleSeed.collectAsState"))
     }
     @Test fun hugeIpv6EngineHasZeroInventedProbes() = runBlocking {
         val engine=SpeedTestEngine()

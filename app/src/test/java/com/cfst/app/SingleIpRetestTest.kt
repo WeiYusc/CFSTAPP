@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 @RunWith(RobolectricTestRunner::class) @Config(sdk=[28])
 class SingleIpRetestTest {
     private val gson=Gson()
-    private fun vm()=SpeedTestViewModel(ApplicationProvider.getApplicationContext<Application>()).also { idle() }
+    private fun vm()=SpeedTestViewModel(ApplicationProvider.getApplicationContext<Application>()) { 88L }.also { idle() }
     private fun idle()=Shadows.shadowOf(Looper.getMainLooper()).idle()
     private fun confirm(vm:SpeedTestViewModel,parent:String,ip:String):Boolean {
         val method=vm.javaClass.methods.firstOrNull { it.name=="confirmSingleIpRetest" && it.parameterCount==2 }
@@ -80,7 +80,7 @@ class SingleIpRetestTest {
         val owner=engine(vm).runOwner!!; assertNotEquals(original.runId,owner.id)
         assertEquals(1,owner.config!!.testCount);assertEquals(1,owner.config!!.downloadTestCount)
         assertEquals(12345L,owner.config!!.byteBudget);assertEquals(2000L,owner.config!!.downloadDuration)
-        assertEquals(45,owner.config!!.runTimeSeconds);assertEquals(77L,owner.config!!.sampleSeed)
+        assertEquals(45,owner.config!!.runTimeSeconds);assertEquals(88L,owner.config!!.sampleSeed)
         assertEquals(9999.0,owner.config!!.latencyLimit,0.0);assertFalse(owner.config!!.allowHttp)
         val savedFields=gson.toJsonTree(original.config).asJsonObject
         val childFields=gson.toJsonTree(owner.config).asJsonObject

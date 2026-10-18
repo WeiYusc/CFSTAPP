@@ -18,7 +18,7 @@ import com.cfst.app.documents.DocumentOperationOwner
 @Composable fun HistoryScreen(vm:SpeedTestViewModel,onStateExport:()->Unit,onStateRestore:()->Unit,onRetry:()->Unit,onExport:(String)->Unit) {
     val records by vm.historyRecords.collectAsState(); val status by vm.statusMessage.collectAsState(); val runs by vm.runRecords.collectAsState()
     val running by vm.isTesting.collectAsState()
-    val randomizeSeed by vm.randomizeSampleSeed.collectAsState()
+
     val owner=DocumentOperationOwner.get(LocalContext.current.applicationContext as Application); val operation by owner.state.collectAsState()
     val available=operation.let { !running && !owner.blocksStart() }
     val identities=vm.historyIdentities()
@@ -58,7 +58,7 @@ import com.cfst.app.documents.DocumentOperationOwner
                 }
             } } }
             if(expanded==id) record.forEachIndexed { row,result -> item(key="$id:$row") {
-                ResultCard(result,config,onRetest=run?.let { { vm.confirmSingleIpRetest(it.runId,result.ipAddress); Unit } },savedConfig=vm.savedTestConfig(),parentRunId=run?.parentRunId,randomizeSeed=randomizeSeed) { vm.copyIp(result.ipAddress) }
+                ResultCard(result,config,onRetest=run?.let { { vm.confirmSingleIpRetest(it.runId,result.ipAddress); Unit } },savedConfig=vm.savedTestConfig(),parentRunId=run?.parentRunId) { vm.copyIp(result.ipAddress) }
             } }
         }
     }

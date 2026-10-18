@@ -41,9 +41,9 @@ import com.cfst.app.utils.DataUnits
     val running by vm.isTesting.collectAsState(); val results by vm.results.collectAsState()
     val network by vm.networkLabel.collectAsState(); val source by vm.sourceLabel.collectAsState()
     val family by vm.useIpv6.collectAsState(); val budget by vm.budgetBytes.collectAsState()
-    val deadline by vm.runTimeSeconds.collectAsState(); val seed by vm.sampleSeed.collectAsState()
+    val deadline by vm.runTimeSeconds.collectAsState()
     val sampling by vm.samplingNotice.collectAsState()
-    val randomizeSeed by vm.randomizeSampleSeed.collectAsState()
+
     val migrationPending by vm.samplingMigrationNoticePending.collectAsState()
     val count by vm.testCount.collectAsState(); val downloads by vm.downloadTestCount.collectAsState()
     val concurrency by vm.maxConcurrentPings.collectAsState(); val pending by vm.draftPending.collectAsState()
@@ -62,7 +62,7 @@ import com.cfst.app.utils.DataUnits
             if(network.endsWith(":VPN")) Text("已识别VPN：当前结果可能反映代理路径，可继续测试。",color=MaterialTheme.colorScheme.error)
         }
         if(migrationPending) item { Card { Column(Modifier.padding(16.dp)) {
-            Text("默认已改每轮探索；原固定seed保留，可在高级设置切回。")
+            Text("每轮自动采样，无需配置内部参数；已有历史结果保留。")
             TextButton(onClick={vm.acknowledgeSamplingMigration()}) { Text("知道了") }
         } } }
         item { Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -78,9 +78,7 @@ import com.cfst.app.utils.DataUnits
         } } }
         item { Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text("标准模式 · 配置",style=MaterialTheme.typography.titleMedium)
-            Text("候选 ≤ $count · 下载 ≤ $downloads · 初筛并发 $concurrency · ${DataUnits.formatBytes(budget)} · 总时限 ${deadline}s · seed $seed")
-            Text(if(randomizeSeed) "新运行：探索seed启动时生成" else "新运行：固定seed $seed")
-            resultConfig?.sampleSeed?.let { Text("当前结果原运行有效seed $it") }
+            Text("候选 ≤ $count · 下载 ≤ $downloads · 初筛并发 $concurrency · ${DataUnits.formatBytes(budget)} · 总时限 ${deadline}s")
             Row(Modifier.fillMaxWidth()) { for(label in listOf("省流","标准","深入")) TextButton(enabled=!running,onClick={vm.presetDraft(label);editing=true},modifier=Modifier.weight(1f)) { Text(label) } }
             OutlinedButton(enabled=!running,onClick={vm.beginDraft();editing=true}) { Text(if(pending) "继续编辑快捷草稿" else "编辑候选/下载/预算") }
             if(editing) quick?.let { d ->
@@ -112,7 +110,7 @@ import com.cfst.app.utils.DataUnits
         if(visible.isEmpty()) item { Text("此分类暂无结果",style=MaterialTheme.typography.bodyMedium) }
         items(visible,key={it.ipAddress}) { result ->
             val parent=vm.currentResultRunId
-            ResultCard(result,resultConfig,onRetest=parent?.let { { vm.confirmSingleIpRetest(it,result.ipAddress); Unit } },savedConfig=vm.savedTestConfig(),parentRunId=runs.firstOrNull { it.runId==parent }?.parentRunId,randomizeSeed=randomizeSeed) { vm.copyIp(result.ipAddress) }
+            ResultCard(result,resultConfig,onRetest=parent?.let { { vm.confirmSingleIpRetest(it,result.ipAddress); Unit } },savedConfig=vm.savedTestConfig(),parentRunId=runs.firstOrNull { it.runId==parent }?.parentRunId) { vm.copyIp(result.ipAddress) }
         }
         item { OutlinedButton(onClick=onExport,enabled=!running && results.isNotEmpty(),modifier=Modifier.fillMaxWidth()) { Text("导出 CSV") } }
     }

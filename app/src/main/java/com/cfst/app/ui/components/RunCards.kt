@@ -15,7 +15,7 @@ import com.cfst.app.ui.presentation.presentResult
 import com.cfst.app.ui.presentation.terminationLabel
 import com.cfst.app.utils.DataUnits
 
-@Composable fun ResultCard(result:SpeedTestResult,config:com.cfst.app.speedtest.SpeedTestEngine.TestConfig?=null,onRetest:(()->Unit)?=null,savedConfig:com.cfst.app.speedtest.SpeedTestEngine.TestConfig?=null,parentRunId:String?=null,randomizeSeed:Boolean=true,onCopy:()->Unit) {
+@Composable fun ResultCard(result:SpeedTestResult,config:com.cfst.app.speedtest.SpeedTestEngine.TestConfig?=null,onRetest:(()->Unit)?=null,savedConfig:com.cfst.app.speedtest.SpeedTestEngine.TestConfig?=null,parentRunId:String?=null,onCopy:()->Unit) {
     val p=presentResult(result,config)
     var detail by remember { mutableStateOf(false) }
     var confirmRetest by remember { mutableStateOf(false) }
@@ -42,12 +42,12 @@ import com.cfst.app.utils.DataUnits
                 Text("实际 Peer ${d.peer.ifBlank { "未知" }} · HTTP ${d.status.takeIf { it>0 } ?: "未知"}")
                 Text("安全核验 ${d.safetyVerified} · 筛选通过 ${d.filterPassed}")
             } else Text(if(config==null) "未测下载；旧记录的配置与质量未知。" else "未测下载；按原运行延迟阈值解释。")
-            config?.let { Text("原运行有效 seed ${it.sampleSeed} · 延迟阈值 ${it.latencyLimit}ms（0 不限）") }
+            config?.let { Text("原运行延迟阈值 ${it.latencyLimit}ms（0 不限）") }
             Text("速度含连接/TLS总耗时，不是峰值；仅计消费响应体，协议开销额外。",style=MaterialTheme.typography.bodySmall)
             parentRunId?.let { Text("复测来源运行 $it",style=MaterialTheme.typography.bodySmall) }
             if(onRetest!=null && savedConfig!=null) {
                 Text("单 IP 复测使用当前已保存配置，不推断旧配置；独立新预算，原结果保留。")
-                RetestConfigSummary(savedConfig,randomizeSeed)
+                RetestConfigSummary(savedConfig)
                 TextButton(onClick={confirmRetest=true},modifier=Modifier.testTag("retest-${result.ipAddress}")) { Text("单 IP 复测…") }
             }
         }
@@ -55,16 +55,16 @@ import com.cfst.app.utils.DataUnits
     if(confirmRetest && onRetest!=null && savedConfig!=null) AlertDialog(onDismissRequest={confirmRetest=false},title={Text("确认单 IP 复测")},text={
         Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text("目标 ${result.ipAddress} · 候选 1 / 下载 ≤ 1")
-            RetestConfigSummary(savedConfig,randomizeSeed)
+            RetestConfigSummary(savedConfig)
             Text("独立新预算，原结果保留。只有确认后才会开始新运行；不会自动复测。")
         }
     },confirmButton={TextButton(onClick={confirmRetest=false;detail=false;onRetest()}) { Text("确认并开始新运行") }},dismissButton={TextButton(onClick={confirmRetest=false}) { Text("取消复测") }})
 }
 
-@Composable private fun RetestConfigSummary(config:com.cfst.app.speedtest.SpeedTestEngine.TestConfig,randomizeSeed:Boolean) {
+@Composable private fun RetestConfigSummary(config:com.cfst.app.speedtest.SpeedTestEngine.TestConfig) {
     Text("当前已保存：${if(config.downloadTest) "TCP + 下载" else "仅 TCP"} · 响应体预算 ${DataUnits.formatBytes(config.byteBudget)} · 单次下载 ${config.downloadDuration/1000}s · 总时限 ${config.runTimeSeconds}s")
     Text("TCP 重复 ${config.pingCount} / 超时 ${config.pingTimeout}ms / 并发 ${config.maxConcurrentPings} · 端口 ${config.port}")
-    Text(if(randomizeSeed) "探索seed启动时生成（唯一literal目标不变）" else "固定seed ${config.sampleSeed}")
+    Text("仅复测已确认的单个 IP，目标不变。")
     Text("HTTPS ${config.downloadUrl} · 筛选 ≥ ${DataUnits.formatBytes((config.speedLimit*1048576).toLong())}/s / 延迟 ≤ ${config.latencyLimit}ms（0 不限制）")
     Text("串行下载；TLS / Peer 核验，不跟随重定向；应用层不使用HTTP代理，仍受系统VPN/当前路由影响；TLS/Peer核验不证明直连。失败或取消部分样本不推荐。",style=MaterialTheme.typography.bodySmall)
 }
