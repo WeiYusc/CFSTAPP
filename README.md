@@ -2,7 +2,7 @@
 
 基于 [Hsia97/CFSTAPP](https://github.com/Hsia97/CFSTAPP) 的 Android Cloudflare IP 测速应用，由 WeiYusc 独立维护；不是上游官方发行版，也不是 Cloudflare 官方产品。原项目参考 [XIU2/CloudflareSpeedTest](https://github.com/XIU2/CloudflareSpeedTest)，本分支保留原有来源和 GPL-3.0 许可证。
 
-当前本地候选：**1.2.3（115，尚未发布）** · Android **7.0 / API 24 及以上** · 包名 `com.cfst.app.local`。
+当前版本：**1.2.3（115）** · Android **7.0 / API 24 及以上** · 包名 `com.cfst.app.local`。
 
 - [下载与版本说明](https://github.com/WeiYusc/CFSTAPP/releases)（只有实际发布的版本才会出现在此）
 - [本版变化](CHANGELOG.md) · [安装与迁移](docs/MIGRATION.md)
