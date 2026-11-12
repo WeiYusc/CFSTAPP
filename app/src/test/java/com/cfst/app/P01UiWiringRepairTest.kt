@@ -13,7 +13,11 @@ class P01UiWiringRepairTest {
     }
     @Test fun advancedGroupsHaveActualRememberedFoldState() {
         val text=source("ui/settings/AdvancedSettingsScreen.kt")
-        assertTrue(text.contains("rememberSaveable")); assertTrue(text.contains("if(expanded")); assertTrue(text.contains("onClick={expanded"))
+        assertTrue(text.contains("rememberSaveable")); assertTrue(text.contains("if(expanded"))
+        for(group in listOf("Probe","Resource","Filter","Endpoint")) {
+            assertTrue("$group toggle is passed to the real GroupHeader",Regex("GroupHeader\\([^\\n]*expanded$group=!expanded$group").containsMatchIn(text))
+        }
+        assertTrue(text.contains("clickable(role=androidx.compose.ui.semantics.Role.Button,onClick=onToggle)"))
     }
     @Test fun listSelectionAndBusyCancellationUseProductionOwners() {
         val text=source("ui/lists/IpListScreen.kt")

@@ -27,8 +27,8 @@ class AutomaticSamplingUiTest {
     }
     @Test fun newCandidateDoesNotReuseAlreadyDeliveredVersion() {
         val build=File("build.gradle").readText()
-        assertTrue(build.contains("versionCode 114"));assertTrue(build.contains("versionName \"1.2.2\""))
-        assertTrue(File("src/main/java/com/cfst/app/ui/settings/AdvancedSettingsScreen.kt").readText().contains("CFST Local 1.2.2"))
+        assertTrue(build.contains("versionCode 115"));assertTrue(build.contains("versionName \"1.2.3\""))
+        assertTrue(File("src/main/java/com/cfst/app/ui/settings/AdvancedSettingsScreen.kt").readText().contains("CFST Local 1.2.3"))
     }
     @Test fun allUserScreensHideInternalSeedAndModeControls() {
         // Static wiring guard only; does not claim Compose touch/visibility acceptance.

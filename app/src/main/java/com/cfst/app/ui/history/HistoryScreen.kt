@@ -1,15 +1,25 @@
 package com.cfst.app.ui.history
 
 import android.app.Application
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Restore
+import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.cfst.app.viewmodel.SpeedTestViewModel
+import com.cfst.app.ui.components.EmptyState
 import com.cfst.app.ui.components.ResultCard
 import com.cfst.app.ui.presentation.presentResult
 import com.cfst.app.utils.DataUnits
@@ -25,26 +35,39 @@ import com.cfst.app.documents.DocumentOperationOwner
     var expanded by rememberSaveable { mutableStateOf<String?>(null) }
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }; var clear by rememberSaveable { mutableStateOf(false) }
     LazyColumn(Modifier.fillMaxSize(),verticalArrangement=Arrangement.spacedBy(12.dp),contentPadding=PaddingValues(bottom=16.dp)) {
-        item { Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp)) {
+        item { Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text("备份与恢复",style=MaterialTheme.typography.titleMedium)
             Text("完整状态包含设置、来源、选择和历史；结果 CSV 仅为测量数据。",style=MaterialTheme.typography.bodySmall)
-            TextButton(onClick=onStateExport,enabled=available) { Text("导出完整状态") }
-            TextButton(onClick=onStateRestore,enabled=available) { Text("恢复完整状态") }
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick=onStateExport,enabled=available,modifier=Modifier.weight(1f)) {
+                    Icon(Icons.Outlined.UploadFile,null,modifier=Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text("导出完整状态")
+                }
+                OutlinedButton(onClick=onStateRestore,enabled=available,modifier=Modifier.weight(1f)) {
+                    Icon(Icons.Outlined.Restore,null,modifier=Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text("恢复完整状态")
+                }
+            }
             if(!available) Text("运行或文档操作未结束，不能开启另一操作",style=MaterialTheme.typography.bodySmall)
         } } }
         item { Text("${records.size} 次记录",style=MaterialTheme.typography.titleMedium)
             Text("旧记录/配置未知；不认领未知归属，不伪造新推荐。",style=MaterialTheme.typography.bodySmall)
             if(status.isNotBlank()) Text(status.take(2048),style=MaterialTheme.typography.bodySmall)
-            if(records.isNotEmpty()) TextButton(onClick={clear=true},enabled=available) { Text("清空历史") }
+            if(records.isNotEmpty()) TextButton(onClick={clear=true},enabled=available) {
+                Icon(Icons.Outlined.DeleteForever,null,modifier=Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text("清空历史")
+            }
         }
-        if(records.isEmpty()) item { Text("暂无历史。完成的运行在原始账本保存成功后出现在这里。") }
+        if(records.isEmpty()) item { EmptyState(Icons.Outlined.History,"暂无历史","完成的运行在原始账本保存成功后出现在这里。") }
         records.forEachIndexed { index,record ->
             val id=identities.getOrNull(index) ?: return@forEachIndexed
             val run=runs.firstOrNull { it.runId==id }
             val config=run?.config
-            item(key=id) { Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text(if(run==null) "旧记录 · 归属未确定" else "原始运行",style=MaterialTheme.typography.titleMedium)
-                run?.parentRunId?.let { Text("单 IP 复测 · 来源运行 $it",style=MaterialTheme.typography.bodySmall) }
+            item(key=id) { Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp).animateContentSize(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(if(run==null) "旧记录 · 归属未确定" else "原始运行",style=MaterialTheme.typography.titleMedium)
+                        run?.parentRunId?.let { Text("单 IP 复测 · 来源运行 $it",style=MaterialTheme.typography.bodySmall) }
+                    }
+                    Icon(Icons.Outlined.ExpandMore,null,modifier=Modifier.size(20.dp).rotate(if(expanded==id) 180f else 0f),tint=MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 Text(record.firstOrNull()?.getTestTimeFormatted()?.let { "结果测量时间 $it" } ?: "时间未知",style=MaterialTheme.typography.bodySmall)
                 Text("${record.size} 条原始结果 · 优选 ${record.count { presentResult(it,config).bucket=="优选" }} · 短样本 ${record.count { presentResult(it,config).bucket=="短样本" }}")
                 Text("响应体 ${DataUnits.formatBytes(run?.summary?.bodyBytesConsumed ?: record.sumOf { it.downloadedBytes })}")

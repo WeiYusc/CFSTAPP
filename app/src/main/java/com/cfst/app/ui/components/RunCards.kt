@@ -3,11 +3,15 @@ package com.cfst.app.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.UnfoldMore
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.cfst.app.model.SpeedTestResult
@@ -15,20 +19,31 @@ import com.cfst.app.ui.presentation.presentResult
 import com.cfst.app.ui.presentation.terminationLabel
 import com.cfst.app.utils.DataUnits
 
-@Composable fun ResultCard(result:SpeedTestResult,config:com.cfst.app.speedtest.SpeedTestEngine.TestConfig?=null,onRetest:(()->Unit)?=null,savedConfig:com.cfst.app.speedtest.SpeedTestEngine.TestConfig?=null,parentRunId:String?=null,onCopy:()->Unit) {
+@Composable fun ResultCard(result:SpeedTestResult,config:com.cfst.app.speedtest.SpeedTestEngine.TestConfig?=null,onRetest:(()->Unit)?=null,savedConfig:com.cfst.app.speedtest.SpeedTestEngine.TestConfig?=null,parentRunId:String?=null,rank:Int?=null,onCopy:()->Unit) {
     val p=presentResult(result,config)
     var detail by remember { mutableStateOf(false) }
     var confirmRetest by remember { mutableStateOf(false) }
+    val haptic=LocalHapticFeedback.current
+    val copyWithFeedback={ haptic.performHapticFeedback(HapticFeedbackType.LongPress);onCopy() }
     Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+            if(rank!=null && rank<3) { RankBadge(rank); Spacer(Modifier.width(8.dp)) }
             Text(result.ipAddress,style=MaterialTheme.typography.titleMedium,modifier=Modifier.weight(1f))
-            IconButton(onClick=onCopy,modifier=Modifier.testTag("copy-${result.ipAddress}")) { Icon(Icons.Outlined.ContentCopy,contentDescription="复制 IP ${result.ipAddress}") }
+            IconButton(onClick=copyWithFeedback,modifier=Modifier.testTag("copy-${result.ipAddress}")) { Icon(Icons.Outlined.ContentCopy,contentDescription="复制 IP ${result.ipAddress}") }
         }
-        Text(p.status,style=MaterialTheme.typography.labelLarge,color=if(p.bucket=="异常/未达标") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
-        Text(p.speed,style=MaterialTheme.typography.headlineSmall)
-        Text("TCP 延迟 ${p.latency} · TCP 失败率 ${p.tcpFailure}",style=MaterialTheme.typography.bodyMedium)
-        Text("响应体 ${p.bytes}",style=MaterialTheme.typography.bodySmall)
-        TextButton(onClick={detail=true},modifier=Modifier.testTag("detail-${result.ipAddress}")) { Text("测量详情") }
+        Text(p.status,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+            Text(p.speed,style=MaterialTheme.typography.headlineSmall,modifier=Modifier.weight(1f))
+            StatusPill(p.bucket)
+        }
+        Row(Modifier.fillMaxWidth()) {
+            MetricStat("TCP 延迟",p.latency,Modifier.weight(1f))
+            MetricStat("TCP 失败率",p.tcpFailure,Modifier.weight(1f))
+            MetricStat("响应体",p.bytes,Modifier.weight(1f))
+        }
+        TextButton(onClick={detail=true},modifier=Modifier.testTag("detail-${result.ipAddress}")) {
+            Icon(Icons.Outlined.UnfoldMore,null,modifier=Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)); Text("测量详情")
+        }
     } }
     if(detail) AlertDialog(onDismissRequest={detail=false},title={Text("测量详情")},text={
         Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -51,7 +66,7 @@ import com.cfst.app.utils.DataUnits
                 TextButton(onClick={confirmRetest=true},modifier=Modifier.testTag("retest-${result.ipAddress}")) { Text("单 IP 复测…") }
             }
         }
-    },confirmButton={TextButton(onClick=onCopy) { Text("复制 IP") }},dismissButton={TextButton(onClick={detail=false}) { Text("关闭详情") }})
+    },confirmButton={TextButton(onClick=copyWithFeedback) { Text("复制 IP") }},dismissButton={TextButton(onClick={detail=false}) { Text("关闭详情") }})
     if(confirmRetest && onRetest!=null && savedConfig!=null) AlertDialog(onDismissRequest={confirmRetest=false},title={Text("确认单 IP 复测")},text={
         Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text("目标 ${result.ipAddress} · 候选 1 / 下载 ≤ 1")

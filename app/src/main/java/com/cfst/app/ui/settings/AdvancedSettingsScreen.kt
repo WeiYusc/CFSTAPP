@@ -1,13 +1,19 @@
 package com.cfst.app.ui.settings
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
@@ -33,9 +39,9 @@ import com.cfst.app.settings.SettingsDraft
                 Text("每轮自动采样，无需配置内部参数；已有历史结果保留。")
                 TextButton(onClick={vm.acknowledgeSamplingMigration()}) { Text("知道了") }
             } }
-            Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick={expandedProbe=!expandedProbe}) { Text("探测 ${if(expandedProbe) "收起" else "展开"}") }
-                Text("候选 ${draft.candidates} · 重复 ${draft.repetitions} · 并发 ${draft.concurrency} · 总时限 ${draft.runTimeSeconds}s")
+            Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp).animateContentSize(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                GroupHeader("探测 ${if(expandedProbe) "收起" else "展开"}",expandedProbe,{expandedProbe=!expandedProbe})
+                Text("候选 ${draft.candidates} · 重复 ${draft.repetitions} · 并发 ${draft.concurrency} · 总时限 ${draft.runTimeSeconds}s",style=MaterialTheme.typography.bodySmall)
                 if(expandedProbe) {
                     DraftInput(draft.candidates,{change(draft.copy(candidates=it))},"候选数 1..10000","candidates-input",integerError(draft.candidates,1..10000),enabled=!running)
                     DraftInput(draft.repetitions,{change(draft.copy(repetitions=it))},"同候选串行重复 1..20","repetitions-input",integerError(draft.repetitions,1..20),enabled=!running)
@@ -43,47 +49,55 @@ import com.cfst.app.settings.SettingsDraft
                     Text("初筛并发 ${draft.concurrency}",style=MaterialTheme.typography.bodySmall)
                 }
             } }
-            Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick={expandedResource=!expandedResource}) { Text("资源 ${if(expandedResource) "收起" else "展开"}") }
-                Text("下载 ${if(draft.enableDownload) "开启" else "关闭"} · 预算 ${draft.budgetMb} MB")
+            Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp).animateContentSize(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                GroupHeader("资源 ${if(expandedResource) "收起" else "展开"}",expandedResource,{expandedResource=!expandedResource})
+                Text("下载 ${if(draft.enableDownload) "开启" else "关闭"} · 预算 ${draft.budgetMb} MB",style=MaterialTheme.typography.bodySmall)
                 if(expandedResource) {
                     DraftInput(draft.runTimeSeconds,{change(draft.copy(runTimeSeconds=it))},"标准run总秒数 30..600","run-deadline-input",integerError(draft.runTimeSeconds,30..600),enabled=!running)
 
                     Text("IPv4 literal/小段优先、去重/24分层；IPv6仅实际literal或≤256成员段，巨大前缀不制造节点。",style=MaterialTheme.typography.bodySmall)
                     Text("下载始终串行",style=MaterialTheme.typography.bodySmall)
-                    Row { Text("启用下载",Modifier.weight(1f)); Switch(draft.enableDownload,{change(draft.copy(enableDownload=it))},enabled=!running) }
+                    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) { Text("启用下载",Modifier.weight(1f)); Switch(draft.enableDownload,{change(draft.copy(enableDownload=it))},enabled=!running) }
                     DraftInput(draft.downloads,{change(draft.copy(downloads=it))},"下载候选尝试上限 1..100","downloads-input",integerError(draft.downloads,1..100),enabled=!running)
                     DraftInput(draft.seconds,{change(draft.copy(seconds=it))},"每候选秒 1..60","seconds-input",integerError(draft.seconds,1..60),enabled=!running)
                     DraftInput(draft.budgetMb,{change(draft.copy(budgetMb=it,budgetDirty=true))},"下载预算 MB（十进制，最多两位小数）","budget-input",if(draft.budgetDirty) runCatching { com.cfst.app.utils.DataUnits.parseBudgetMb(draft.budgetMb);null }.getOrElse { "预算须为有效 MB，最多两位小数" } else null,KeyboardType.Decimal,!running)
                     Text("未编辑预算保留精确原bytes，不将显示四舍五入写回。",style=MaterialTheme.typography.bodySmall)
                 }
             } }
-            Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick={expandedFilter=!expandedFilter}) { Text("筛选 ${if(expandedFilter) "收起" else "展开"}") }
-                Text("最低速度 ${draft.speedMb} MB/s · 最大延迟 ${draft.latency} ms")
+            Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp).animateContentSize(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                GroupHeader("筛选 ${if(expandedFilter) "收起" else "展开"}",expandedFilter,{expandedFilter=!expandedFilter})
+                Text("最低速度 ${draft.speedMb} MB/s · 最大延迟 ${draft.latency} ms",style=MaterialTheme.typography.bodySmall)
                 if(expandedFilter) {
                     DraftInput(draft.speedMb,{change(draft.copy(speedMb=it,speedDirty=true))},"最低速度 MB/s，0不限","speed-input",decimalError(draft.speedMb,1000000.0),KeyboardType.Decimal,!running)
                     DraftInput(draft.latency,{change(draft.copy(latency=it))},"最大延迟 ms，0不限","latency-input",decimalError(draft.latency,9999.0),KeyboardType.Decimal,!running)
                 }
             } }
-            Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick={expandedEndpoint=!expandedEndpoint}) { Text("安全端点 ${if(expandedEndpoint) "收起" else "展开"}") }
-                Text("端口 ${draft.port} · 系统 CA / SNI")
+            Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp).animateContentSize(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                GroupHeader("安全端点 ${if(expandedEndpoint) "收起" else "展开"}",expandedEndpoint,{expandedEndpoint=!expandedEndpoint})
+                Text("端口 ${draft.port} · 系统 CA / SNI",style=MaterialTheme.typography.bodySmall)
                 if(expandedEndpoint) {
                     DraftInput(draft.url,{change(draft.copy(url=it))},"HTTPS 下载资源 URL","url-input",urlError(draft.url),KeyboardType.Uri,!running)
                     DraftInput(draft.port,{change(draft.copy(port=it))},"目标端口（覆盖URL端口）","port-input",integerError(draft.port,1..65535),enabled=!running)
                     DraftInput(draft.mirror,{change(draft.copy(mirror=it))},"仅列表更新镜像 URL","mirror-input",if(draft.mirror.isEmpty()) null else urlError(draft.mirror),KeyboardType.Uri,!running)
-                    Row { Text("使用列表镜像",Modifier.weight(1f)); Switch(draft.useMirror,{change(draft.copy(useMirror=it))},enabled=!running) }
+                    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) { Text("使用列表镜像",Modifier.weight(1f)); Switch(draft.useMirror,{change(draft.copy(useMirror=it))},enabled=!running) }
                 }
             } }
-            Text("帮助 / 关于 · CFST Local 1.2.2",style=MaterialTheme.typography.titleMedium)
+            Text("帮助 / 关于 · CFST Local 1.2.3",style=MaterialTheme.typography.titleMedium)
             Text("literal DNS、实际Peer/Port核验、NO_PROXY、禁止重定向。吞吐含连接/TLS总耗时；不是峰值或运营商wire-byte账单。",style=MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(16.dp))
         }
-        Surface(shadowElevation=4.dp) { Column(Modifier.fillMaxWidth().padding(vertical=8.dp)) {
+        Surface(shadowElevation=4.dp) { Column(Modifier.fillMaxWidth().padding(vertical=8.dp).padding(horizontal=16.dp)) {
             Button(onClick={if(vm.saveDraft(draft)) onDone()},enabled=!running,modifier=Modifier.fillMaxWidth().testTag("settings-save")) { Text("保存设置") }
             TextButton(onClick={vm.cancelDraft();onDone()},modifier=Modifier.fillMaxWidth()) { Text("取消草稿") }
         } }
+    }
+}
+
+/** 分组手风琴头：整行可点，文本保持 "组名 展开/收起" 格式（UI 测试依赖该精确文案）。 */
+@Composable private fun GroupHeader(text:String,expanded:Boolean,onToggle:()->Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min=48.dp).clickable(role=androidx.compose.ui.semantics.Role.Button,onClick=onToggle).padding(vertical=2.dp),verticalAlignment=Alignment.CenterVertically) {
+        Text(text,style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary,modifier=Modifier.weight(1f))
+        Icon(Icons.Outlined.ExpandMore,null,modifier=Modifier.size(20.dp).rotate(if(expanded) 180f else 0f),tint=MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 private fun integerError(text:String,range:IntRange):String?=if(text.toIntOrNull() in range) null else "请输入 ${range.first}..${range.last} 整数"

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -12,6 +13,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.History
@@ -58,6 +64,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState:Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         documents=DocumentOperationOwner.get(application); pendingCsv=PendingCsvExport(application)
         recoveryRequired=try { com.cfst.app.settings.AppStateStore.get(application); false } catch(_:IllegalStateException) { true }
         pendingCsvId=savedInstanceState?.getString("pendingCsvId"); pendingImportId=savedInstanceState?.getString("pendingImportId")
@@ -168,15 +175,16 @@ class MainActivity : ComponentActivity() {
     androidx.activity.compose.BackHandler(enabled=page!="测速" || dirty) {
         if(page=="测速") navigation.resumeEditor() else navigation.navigate("测速")
     }
-    Scaffold(topBar={TopAppBar(title={Text(page)})},bottomBar={
+    Scaffold(topBar={TopAppBar(title={Text(page)},colors=TopAppBarDefaults.topAppBarColors(containerColor=MaterialTheme.colorScheme.background))},bottomBar={
         Column(Modifier.imePadding()) {
             if(page=="测速") com.cfst.app.ui.test.TestActionBar(vm) {
                 if(dirty) navigation.resumeEditor() else navigation.navigate(if(operation?.kind in setOf("CSV","STATE")) "历史" else "列表")
             }
             NavigationBar {
                 val labels=listOf("测速","列表","历史","设置")
-                val icons=listOf(androidx.compose.material.icons.Icons.Outlined.Speed,androidx.compose.material.icons.Icons.Outlined.List,androidx.compose.material.icons.Icons.Outlined.History,androidx.compose.material.icons.Icons.Outlined.Settings)
-                labels.forEachIndexed { index,label -> NavigationBarItem(selected=page==label,onClick={navigation.navigate(label)},icon={Icon(icons[index],contentDescription=label)},label={Text(label)},modifier=Modifier.testTag("nav-$label")) }
+                val outlinedIcons=listOf(Icons.Outlined.Speed,Icons.Outlined.List,Icons.Outlined.History,Icons.Outlined.Settings)
+                val filledIcons=listOf(Icons.Filled.Speed,Icons.Filled.List,Icons.Filled.History,Icons.Filled.Settings)
+                labels.forEachIndexed { index,label -> NavigationBarItem(selected=page==label,onClick={navigation.navigate(label)},icon={Icon(if(page==label) filledIcons[index] else outlinedIcons[index],contentDescription=label)},label={Text(label)},modifier=Modifier.testTag("nav-$label")) }
             }
         }
     }) { padding ->
